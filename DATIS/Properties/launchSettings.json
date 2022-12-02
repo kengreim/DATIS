@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "DATIS (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "DATIS (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

@@ -1,0 +1,71 @@
+<!-- Copyright (c) Microsoft Corporation and Contributors. -->
+<!-- Licensed under the MIT License. -->
+
+<Window
+    x:Class="DATIS.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:DATIS"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <!-- Add GRID CODE -->
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Grid Margin="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <ComboBox ItemsSource="{x:Bind AtisViewModel.AirportNames, Mode=OneWay}"
+                      Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"
+                      PlaceholderText="{x:Bind AtisViewModel.DropdownPlaceholderText, Mode=OneWay}"
+                      SelectedItem="{x:Bind AtisViewModel.SelectedAirport, Mode=TwoWay}"
+                      Width="200" FontFamily="Consolas" IsEnabled="True">
+            </ComboBox>
+
+
+            <ToggleSwitch AutomationProperties.Name="simple ToggleSwitch" x:Name="dark_switch" Grid.Column="1" CornerRadius="3"
+                          VerticalAlignment="Center"  HorizontalAlignment="Right" MinWidth="0"
+                          OffContent="Dark" OnContent="Light"
+                          HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontFamily="Consolas" Visibility="Collapsed"/>
+        </Grid>
+
+        <Grid x:Name="Control1" Grid.Row="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" VerticalAlignment="Center" HorizontalAlignment="Center" Text="{x:Bind AtisViewModel.AtisTitle, Mode=OneWay}"
+            IsTextSelectionEnabled="False" FontSize="25" FontFamily="Consolas" FontWeight="Bold" />
+
+            <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" VerticalAlignment="Center" HorizontalAlignment="Center" Text="{x:Bind AtisViewModel.AtisText, Mode=OneWay}"
+            IsTextSelectionEnabled="True" TextWrapping="Wrap" FontFamily="Consolas" Margin="45, 10, 45, 10" />
+
+            <Button x:Name="btnDeparture" Grid.Row="2" Grid.Column="0" Content="Departure" FontFamily="Consolas"
+                    HorizontalAlignment="Right" Margin="5,5,5,5" Width="120" Visibility="{x:Bind AtisViewModel.BtnDepartureVisibility, Mode=OneWay}"
+                    IsEnabled="{x:Bind AtisViewModel.BtnDepartureEnabled, Mode=OneWay}"
+                    Command="{x:Bind AtisViewModel.DepArrToggleCommand, Mode=OneWay}" />
+
+            <Button x:Name="btnArrival" Grid.Row="2" Grid.Column="1" Content="Arrival" HorizontalAlignment="Left" Margin="5,5,5,5" Width="120"
+                    Visibility="{x:Bind AtisViewModel.BtnArrivalVisibility, Mode=OneWay}"
+                    IsEnabled="{x:Bind AtisViewModel.BtnArrivalEnabled, Mode=OneWay}"
+                    Command="{x:Bind AtisViewModel.DepArrToggleCommand, Mode=OneWay}" />
+
+        </Grid>
+
+    </Grid>
+</Window>
