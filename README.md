@@ -1,7 +1,7 @@
 ![datis2](https://user-images.githubusercontent.com/34892440/205399639-3c2c4159-79cf-4c55-93fe-bc4d699db12f.gif)
 
 # What is this? 
-A likely-poorly-architected desktop app to continuously (well, once per minute) fetch and display all the FAA D-ATISs (thanks to the https://datis.clowd.io API).
+A likely-poorly-architected desktop app to continuously (well, once per minute) fetch and display FAA D-ATISs (thanks to the https://datis.clowd.io API) with a little bit of parsing.
 
 This was a learning project as a first attempt to work with:
 * C# and its async/await pattern
