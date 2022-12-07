@@ -108,31 +108,37 @@ namespace DATIS.ViewModels
                 while (true)
                 {
                     List<Atis> newAtis = await AtisFetcher.GetAllAsync();
+                    var tempFetchedAirports = new List<string>();
 
                     // Store all of the ATIS internally
                     FetchedAtisList.Clear();
                     foreach (var item in newAtis)
                     {
                         FetchedAtisList.Add(item);
+                        if (!tempFetchedAirports.Contains(item.Airport))
+                        {
+                            tempFetchedAirports.Add(item.Airport);
+                        }
                     }
 
                     // Update the airport list for dropdown on the UI Thread so that notifications are captured by UI
-                    Dispatcher.TryEnqueue(() =>
+                    // But only do it if the list has changed
+                    if (!AirportNames.SequenceEqual(tempFetchedAirports))
                     {
-                        AirportNames.Clear();
-                        foreach (var item in newAtis)
+                        Dispatcher.TryEnqueue(() =>
                         {
-                            if (!AirportNames.Contains(item.Airport))
+                            AirportNames.Clear();
+                            foreach (var airport in tempFetchedAirports)
                             {
-                                AirportNames.Add(item.Airport);
+                                AirportNames.Add(airport);
                             }
-                        }
-                        DropdownPlaceholderText = "Select an Airport";
-                        DropdownEnabled = true;
+                            DropdownPlaceholderText = "Select an Airport";
+                            DropdownEnabled = true;
 
-                        // TODO: need to update the displayed texts here too, not just airport list
+                            // TODO: need to update the displayed texts here too, not just airport list
 
-                    });
+                        });
+                    }
 
                     await Task.Delay(Constants.atisUpdateDelay);
                 }
