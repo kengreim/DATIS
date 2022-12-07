@@ -75,7 +75,7 @@ namespace DATIS.ViewModels
                     List<Atis> newAtis = await AtisFetcher.GetAllAsync();
                     var tempFetchedAirports = new List<string>();
 
-                    // Store all of the ATIS internally
+                    // Store all of the ATIS internally and build new airport list
                     FetchedAtisList.Clear();
                     foreach (var item in newAtis)
                     {
@@ -101,13 +101,11 @@ namespace DATIS.ViewModels
                             DropdownEnabled = true;
                         });
                     }
-                    else
-                    {
-                        // If the list of airports hasn't changed, we still need to update the displayed
-                        // ATIS title and text in case that has changed
-                        Dispatcher.TryEnqueue(() => { UpdateVisibleAtis(); });
-                    }
 
+                    // Update the visible ATIS on the main UI thread every time we get knew data, in case it changed
+                    Dispatcher.TryEnqueue(() => { UpdateVisibleAtis(); });
+
+                    // Wait to loop with some delay (default 60 seconds)
                     await Task.Delay(Constants.atisUpdateDelay);
                 }
             });
@@ -115,6 +113,12 @@ namespace DATIS.ViewModels
 
         private void UpdateVisibleAtis(string? selectedAirport = null)
         {
+            // Do nothing if we haven't selected any airport now or in the past
+            if (_selectedAirport == null && selectedAirport == null)
+            {
+                return;
+            }
+            
             _selectedAirport = selectedAirport != null ? selectedAirport : _selectedAirport;
 
             var filteredAtis = new List<Atis>();
