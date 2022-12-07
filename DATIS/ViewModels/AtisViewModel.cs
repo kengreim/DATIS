@@ -105,7 +105,7 @@ namespace DATIS.ViewModels
                     {
                         // If the list of airports hasn't changed, we still need to update the displayed
                         // ATIS title and text in case that has changed
-                        Dispatcher.TryEnqueue(() => { UpdateVisibleAtis(_selectedAirport); });
+                        Dispatcher.TryEnqueue(() => { UpdateVisibleAtis(); });
                     }
 
                     await Task.Delay(Constants.atisUpdateDelay);
@@ -113,9 +113,9 @@ namespace DATIS.ViewModels
             });
         }
 
-        private void UpdateVisibleAtis(string selectedAirport)
+        private void UpdateVisibleAtis(string? selectedAirport = null)
         {
-            _selectedAirport = selectedAirport;
+            _selectedAirport = selectedAirport != null ? selectedAirport : _selectedAirport;
 
             var filteredAtis = new List<Atis>();
             foreach (var item in FetchedAtisList)
