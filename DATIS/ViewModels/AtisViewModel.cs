@@ -86,8 +86,8 @@ namespace DATIS.ViewModels
                         }
                     }
 
-                    // Update the airport list for dropdown on the UI Thread so that notifications are captured by UI
-                    // But only do it if the list has changed
+                    // If the list of airports has changed, update the dropdown on the UI Thread
+                    // so that notifications are captured by UI
                     if (!AirportNames.SequenceEqual(tempFetchedAirports))
                     {
                         Dispatcher.TryEnqueue(() =>
@@ -99,10 +99,13 @@ namespace DATIS.ViewModels
                             }
                             DropdownPlaceholderText = "Select an Airport";
                             DropdownEnabled = true;
-
-                            // TODO: need to update the displayed texts here too, not just airport list
-
                         });
+                    }
+                    else
+                    {
+                        // If the list of airports hasn't changed, we still need to update the displayed
+                        // ATIS title and text in case that has changed
+                        Dispatcher.TryEnqueue(() => { UpdateVisibleAtis(_selectedAirport); });
                     }
 
                     await Task.Delay(Constants.atisUpdateDelay);
