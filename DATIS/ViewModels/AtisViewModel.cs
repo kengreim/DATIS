@@ -50,12 +50,8 @@ namespace DATIS.ViewModels
         [ObservableProperty]
         private bool btnArrivalEnabled = true;
 
-        private string _selectedAirport;
-        public string SelectedAirport
-        {
-            get => _selectedAirport;
-            set => UpdateVisibleAtis(value);
-        }
+        [ObservableProperty]
+        private string selectedAirport;
 
         public AtisViewModel(DispatcherQueue dispatcher)
         {
@@ -111,21 +107,24 @@ namespace DATIS.ViewModels
             });
         }
 
+        partial void OnSelectedAirportChanged(string value)
+        {
+            UpdateVisibleAtis(value);
+        }
+
         private void UpdateVisibleAtis(string? selectedAirport = null)
         {
             // Do nothing if we haven't selected any airport now or in the past
-            if (_selectedAirport == null && selectedAirport == null)
+            if (SelectedAirport is null && selectedAirport is null)
             {
                 return;
             }
-            
-            // If we didn't get a selectedAirport param, don't change _selectedAirport
-            _selectedAirport = selectedAirport ?? _selectedAirport;
 
+            // Find the ATISes for the selected airport
             var filteredAtis = new List<Atis>();
             foreach (var item in FetchedAtisList)
             {
-                if (item.Airport == _selectedAirport)
+                if (item.Airport == SelectedAirport)
                 {
                     filteredAtis.Add(item);
                 }
