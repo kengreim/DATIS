@@ -118,13 +118,13 @@ namespace DATIS.ViewModels
             {
                 return;
             }
-            
-            _selectedAirport = selectedAirport != null ? selectedAirport : _selectedAirport;
+
+            _selectedAirport ??= selectedAirport;
 
             var filteredAtis = new List<Atis>();
             foreach (var item in FetchedAtisList)
             {
-                if (item.Airport == selectedAirport)
+                if (item.Airport == _selectedAirport)
                 {
                     filteredAtis.Add(item);
                 }
