@@ -118,8 +118,9 @@ namespace DATIS.ViewModels
             {
                 return;
             }
-
-            _selectedAirport ??= selectedAirport;
+            
+            // If we didn't get a selectedAirport param, don't change _selectedAirport
+            _selectedAirport = selectedAirport ?? _selectedAirport;
 
             var filteredAtis = new List<Atis>();
             foreach (var item in FetchedAtisList)
