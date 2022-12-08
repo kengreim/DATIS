@@ -5,9 +5,6 @@ using System.Threading.Tasks;
 using DATIS.Services;
 using DATIS.Models;
 using Microsoft.UI.Dispatching;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -20,11 +17,7 @@ namespace DATIS.ViewModels
         public DispatcherQueue Dispatcher { get; set; }
         public AtisFetchService AtisFetcher { get; set; }
         public ObservableCollection<string> AirportNames { get; private set; }
-        
-        private List<Atis> FetchedAtisList { get; set; }
-        private string _currentCombinedAtisText = "";
-        private string _currentDepartureAtisText = "";
-        private string _currentArrivalAtisText = "";
+        private Dictionary<string, Airport> AirportDictionary { get; set; }
 
         [ObservableProperty]
         private string dropdownPlaceholderText = "Loading airports...";
@@ -58,7 +51,6 @@ namespace DATIS.ViewModels
             AtisFetcher = new AtisFetchService();
             Dispatcher = dispatcher;
             AirportNames = new ObservableCollection<string>();
-            FetchedAtisList = new List<Atis>();
             StartUpdateLoop();
         }
 
@@ -68,30 +60,37 @@ namespace DATIS.ViewModels
             {
                 while (true)
                 {
+                    // Fetch all the ATIS and build new lookup dict
                     List<Atis> newAtis = await AtisFetcher.GetAllAsync();
-                    var tempFetchedAirports = new List<string>();
-
-                    // Store all of the ATIS internally and build new airport list
-                    FetchedAtisList.Clear();
-                    foreach (var item in newAtis)
+                    Dictionary<string, Airport> newAirportDict = new();
+                    foreach (var atis in newAtis)
                     {
-                        FetchedAtisList.Add(item);
-                        if (!tempFetchedAirports.Contains(item.Airport))
+                        if (newAirportDict.ContainsKey(atis.Airport))
                         {
-                            tempFetchedAirports.Add(item.Airport);
+                            newAirportDict[atis.Airport].AtisList.Add(atis);
+                        }
+                        else
+                        {
+                            var newAirport = new Airport(atis.Airport, new List<Atis> { atis });
+                            newAirportDict.Add(newAirport.Name, newAirport);
                         }
                     }
 
+                    // Store new fetched dictionary as a class member
+                    AirportDictionary = newAirportDict;
+
                     // If the list of airports has changed, update the dropdown on the UI Thread
-                    // so that notifications are captured by UI
-                    if (!AirportNames.SequenceEqual(tempFetchedAirports))
+                    // so that notifications are captured by UI. Using hash sets to be order invariant
+                    var existingAirportsHash = new HashSet<string>(AirportNames);
+                    var newAirportsHash = new HashSet<string>(newAirportDict.Keys);
+                    if (!existingAirportsHash.SetEquals(newAirportsHash))
                     {
                         Dispatcher.TryEnqueue(() =>
                         {
                             AirportNames.Clear();
-                            foreach (var airport in tempFetchedAirports)
+                            foreach (KeyValuePair<string, Airport> airport in AirportDictionary)
                             {
-                                AirportNames.Add(airport);
+                                AirportNames.Add(airport.Key);
                             }
                             DropdownPlaceholderText = "Select an Airport";
                             DropdownEnabled = true;
@@ -121,43 +120,28 @@ namespace DATIS.ViewModels
             }
 
             // Find the ATISes for the selected airport
-            var filteredAtis = new List<Atis>();
-            foreach (var item in FetchedAtisList)
-            {
-                if (item.Airport == SelectedAirport)
-                {
-                    filteredAtis.Add(item);
-                }
-            }
+            List<Atis> atisList = AirportDictionary[SelectedAirport].AtisList;
 
-            if (filteredAtis.Count == 1)
+
+            if (atisList.Count == 1)
             {               
-                _currentCombinedAtisText = filteredAtis[0].Datis;
-                AtisText = AtisTextBodyFromFullAtis(_currentCombinedAtisText);
-                AtisTitle = AtisTitleFromFullAtis(_currentCombinedAtisText);
+                AtisText = AtisTextBodyFromFullAtis(atisList[0].Text);
+                AtisTitle = AtisTitleFromFullAtis(atisList[0].Text);
 
                 // Hide Dep/Arr buttons
                 BtnDepartureVisibility = false;
                 BtnArrivalVisibility = false;
             }
-            else if (filteredAtis.Count == 2)
-            {
+            else if (atisList.Count == 2)
+            {   
                 // If we just changed to this airport, default to showing the Departure
-                if (filteredAtis[0].Type == "departure")
-                {
-                    _currentCombinedAtisText = "";
-                    _currentDepartureAtisText = filteredAtis[0].Datis;
-                    _currentArrivalAtisText = filteredAtis[1].Datis;
-                }
-                else
-                {
-                    _currentCombinedAtisText = "";
-                    _currentDepartureAtisText = filteredAtis[1].Datis;
-                    _currentArrivalAtisText = filteredAtis[0].Datis;
-                }
+                string fullText = AirportDictionary[SelectedAirport].AtisList
+                    .Where(a => a.Type == AtisType.Departure)
+                    .First()
+                    .Text;
 
-                AtisText = AtisTextBodyFromFullAtis(_currentDepartureAtisText);
-                AtisTitle = AtisTitleFromFullAtis(_currentDepartureAtisText);
+                AtisText = AtisTextBodyFromFullAtis(fullText);
+                AtisTitle = AtisTitleFromFullAtis(fullText);
 
                 // Show Dep/Arr buttons
                 BtnDepartureVisibility = true;
@@ -172,11 +156,21 @@ namespace DATIS.ViewModels
         [RelayCommand]
         private void DepArrToggle()
         {
+            var depFullText = AirportDictionary[SelectedAirport].AtisList
+                .Where(a => a.Type == AtisType.Departure)
+                .First()
+                .Text;
+
+            var arrFullText = AirportDictionary[SelectedAirport].AtisList
+                .Where(a => a.Type == AtisType.Arrival)
+                .First()
+                .Text;
+
             // If Departure button is disabled, that means we're currently showing the departure ATIS, so change to arrival
-            AtisText = !BtnDepartureEnabled ? AtisTextBodyFromFullAtis(_currentArrivalAtisText) : AtisTextBodyFromFullAtis(_currentDepartureAtisText);
+            AtisText = !BtnDepartureEnabled ? AtisTextBodyFromFullAtis(arrFullText) : AtisTextBodyFromFullAtis(depFullText);
             
             // Update ATIS title
-            AtisTitle = !BtnDepartureEnabled ? AtisTitleFromFullAtis(_currentArrivalAtisText) : AtisTitleFromFullAtis(_currentDepartureAtisText);
+            AtisTitle = !BtnDepartureEnabled ? AtisTitleFromFullAtis(arrFullText) : AtisTitleFromFullAtis(depFullText);
 
             // Swap button states
             BtnDepartureEnabled = !BtnDepartureEnabled;

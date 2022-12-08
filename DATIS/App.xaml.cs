@@ -52,7 +52,7 @@ namespace DATIS
             IntPtr hWnd = WinRT.Interop.WindowNative.GetWindowHandle(m_window);
             WindowId windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hWnd);
             AppWindow appWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(windowId);
-            var size = new SizeInt32(700, 400);
+            var size = new SizeInt32(700, 450);
             appWindow.Resize(size);
 
             m_window.Activate();
